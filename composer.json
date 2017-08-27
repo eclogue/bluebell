@@ -1,0 +1,19 @@
+{
+    "name": "bugbear/bluebell",
+    "authors": [
+        {
+            "name": "bugbear",
+            "email": "yuhe.wei@upai.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {"Bluebell\\": "./"}
+    },
+    "repositories": {
+        "packagist": {
+            "type": "composer",
+            "url": "https://packagist.phpcomposer.com"
+        }
+    },
+    "require": {}
+}
