@@ -20,6 +20,7 @@ class Channel
 
     private $buffer;
 
+
     private $readCond;
 
     private $writeCond;
@@ -49,13 +50,15 @@ class Channel
      */
     public function put($data)
     {
+//        echo "put <----" . $data . PHP_EOL;
         if ($this->closed) {
             return false;
         }
 
         if ($this->takeQueue->count()) {
-            $resolve = $this->takeQueue->dequeue();
-            return $resolve($data);
+            $task = $this->takeQueue->dequeue();
+            $task->setResult($data);
+            $task->resolve();
         }
 
         if ($this->isBuffered() && !$this->buffer->isFull()) {
@@ -63,35 +66,34 @@ class Channel
             return true;
         }
 
-        $this->putQueue->enqueue($data);
-
-        return true;
+        $task = new Deferred($data);
+        $this->putQueue->enqueue($task);
+        return $task;
     }
 
     public function take()
     {
+//        echo "take----->" . PHP_EOL;
         if ($this->closed) {
             return false;
         }
-        if ($this->isBuffered()) {
-            while (!$this->buffer->isEmpty()) {
-                $task = $this->buffer->pop();
-                yield $task;
-            }
-
-            return null;
+        if ($this->isBuffered() && !$this->buffer->isEmpty()) {
+            $task = $this->buffer->pop();
+            return $task;
         }
 
-        while ($this->putQueue->count()) {
+        if ($this->putQueue->count()) {
             $task = $this->putQueue->dequeue();
-            yield $task;
+            $task->resolve();
+            return $task->getResult();
         }
 
         // no values, block
-        $task = $this->wrap();
+        $task = new Deferred();
         $this->takeQueue->enqueue($task);
 
-        return $task;
+        return null;
+//        return $task->wait();
     }
 
 
@@ -110,16 +112,6 @@ class Channel
 
     }
 
-    public function wrap()
-    {
-        $func =  function ($value) {
-            $this->takeQueue->enqueue($value);
-            yield true;
-        };
-
-        $func->bindTo($this);
-        return $func;
-    }
 
     public function close()
     {

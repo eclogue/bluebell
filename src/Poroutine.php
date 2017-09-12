@@ -12,6 +12,7 @@ namespace Bluebell;
 
 use Generator;
 use SplStack;
+use RuntimeException;
 
 class Poroutine
 {
@@ -62,7 +63,7 @@ class Poroutine
     {
         $coStack = new SplStack;
         $value = null;
-        while(true) {
+        for(;;) {
             try {
                 if ($this->exception) {
                     $gen->throw($this->exception);
