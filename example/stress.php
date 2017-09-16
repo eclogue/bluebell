@@ -37,27 +37,3 @@ function send($chan, $ops) {
 //$scheduler->add(receive($channel, $ops));
 //
 //$scheduler->run();
-//$start = microtime(true);
-//for ($i =0; $i < $ops; $i++) {
-//
-//}
-//$duration = microtime(true) - $start;
-//echo "duration:" . $duration . PHP_EOL;
-//echo "ops/s:" . ($ops / $duration) . PHP_EOL;
-function xrange($ops) {
-    $q = new SplQueue();
-
-    for ($i =0; $i < $ops; $i++) {
-        yield $q->enqueue($i);
-    }
-}
-$start = microtime(true);
-
-$gen = xrange($ops);
-foreach($gen as $key => $value) {
-//    echo $key . '===>' . $value . PHP_EOL;
-}
-
-$duration = microtime(true) - $start;
-echo "duration:" . $duration . PHP_EOL;
-echo "ops/s:" . ($ops / $duration) . PHP_EOL;

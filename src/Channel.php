@@ -10,30 +10,27 @@
 namespace Bluebell;
 
 use SplQueue;
+use Threaded;
 
-class Channel
+class Channel extends Threaded
 {
 
-    private $putQueue;
+    public $putting = 0;
 
-    private $takeQueue;
+    public $taking = 0;
 
-    private $buffer;
+    public $buffer;
 
+    public $closed = false;
 
-    private $readCond;
-
-    private $writeCond;
-
-    private $mutexLock;
-
-    private $closed = false;
+    public $queue = [];
 
 
     public function __construct($size = 0)
     {
-        $this->putQueue = new SplQueue();
-        $this->takeQueue = new SplQueue();
+//        $this->putQueue = [];
+//        $this->takeQueue = [];
+//        $this->queue = [];
         if ($size) {
             $this->buffer = new Buffer($size);
         }
@@ -50,50 +47,73 @@ class Channel
      */
     public function put($data)
     {
-//        echo "put <----" . $data . PHP_EOL;
-        if ($this->closed) {
-            return false;
-        }
+//        echo '------>put=' . $data . PHP_EOL;
+        return $this->synchronized(function() use ($data) {
+            if ($this->closed) {
+                return false;
+            }
+            $this->putting++;
+            if ($this->taking > 0) {
+                $this->queue[] = $data;
+               return $this->notify();
+            }
 
-        if ($this->takeQueue->count()) {
-            $task = $this->takeQueue->dequeue();
-            $task->setResult($data);
-            $task->resolve();
-        }
+            // buffered
+            if ($this->isBuffered()) {
+                // buffer full, block
+                while ($this->buffer->isFull() && !$this->closed) {
+                    $this->wait();
+                }
+                if ($this->closed) {
+                    return false;
+                }
+                $data = $this->buffer->push($data);
+                return $data;
+            }
 
-        if ($this->isBuffered() && !$this->buffer->isFull()) {
-            $this->buffer->push($data);
+            if ($this->closed) {
+                return false;
+            }
+
+            $this->queue[] = $data;
+            $this->wait();
+
             return true;
-        }
-
-        $task = new Deferred($data);
-        $this->putQueue->enqueue($task);
-        return $task;
+        });
     }
 
     public function take()
     {
-//        echo "take----->" . PHP_EOL;
-        if ($this->closed) {
-            return false;
-        }
-        if ($this->isBuffered() && !$this->buffer->isEmpty()) {
-            $task = $this->buffer->pop();
-            return $task;
-        }
+//        echo 'take<------' . PHP_EOL;
+        return $this->synchronized(function() {
+            if ($this->closed) {
+                return false;
+            }
+            // buffered
+            if ($this->isBuffered() && !$this->buffer->isEmpty()) {
+                $data = $this->buffer->pop();
+                return $data;
+            }
+            if (!$this->closed && $this->putting < 1) {
+                // no put, block
+                $this->taking++;
+                $this->wait();
+                $this->taking--;
+            }
 
-        if ($this->putQueue->count()) {
-            $task = $this->putQueue->dequeue();
-            $task->resolve();
-            return $task->getResult();
-        }
+            if ($this->closed) {
+                return false;
+            }
 
-        // no values, block
-        $task = new Deferred();
-        $this->takeQueue->enqueue($task);
+//            var_dump('---->', $this->queue);
+            $data = $this->current();
+//            echo "this -> out " . $data . PHP_EOL;
+            $this->putting--;
+            $this->notify();
 
-        return null;
-//        return $task->wait();
+            return $data;
+
+        });
     }
 
 
@@ -102,14 +122,30 @@ class Channel
 
     }
 
-    public function reduce()
-    {
+    public function current() {
+        var_dump($this->queue);
+        if ($this->isEmpty($this->queue)) {
+            return false;
+        }
 
+        $data = (array) $this->queue;
+        $keys = array_keys($data);
+        $ret = array_shift($data);
+        $index = $keys[0];
+//        echo "index--->+++" . $index . PHP_EOL;
+        unset($this->queue[$index]);
+
+        return $ret;
     }
 
-    public function delay()
+    public function isEmpty($item)
     {
+        if (is_object($item)) {
+            $item = (array) $item;
+            return empty(array_keys($item));
+        }
 
+        return empty($item);
     }
 
 
@@ -121,10 +157,10 @@ class Channel
         $this->closed = true;
         $this->takeQueue = null;
         $this->putQueue = null;
+        $this->buffer = null;
+
+        return true;
     }
 
-    public function resolve($data = null)
-    {
-        yield $data;
-    }
+
 }

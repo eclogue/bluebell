@@ -15,5 +15,7 @@
             "url": "https://packagist.phpcomposer.com"
         }
     },
-    "require": {}
+    "require": {
+        "react/event-loop": "^0.4.3"
+    }
 }
