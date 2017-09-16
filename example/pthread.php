@@ -37,12 +37,14 @@ class Test1 extends Threaded {
     }
 
     public function run() {
-        for($i =0; $i < 1e2; $i++) {
-            $this->channel->put($i);
+        for($i =0; $i < 5 * 10; $i++) {
+            $ball = new SplStack();
+            $this->channel->put($ball);
         }
     }
     protected $channel;
 }
+
 
 class Test2 extends Threaded {
     public function __construct(Channel $channel) {
@@ -51,21 +53,23 @@ class Test2 extends Threaded {
 
     public function run() {
         $start = microtime(true);
-        for($i =0; $i < 1e2; $i++) {
+        for($i =0; $i < 5 ; $i++) {
             $data = $this->channel->take();
-//            var_dump('result', $data);
+            var_dump($data);
+//            echo "++++++" . $data . PHP_EOL;
         }
         $duration = microtime(true) - $start;
         echo "duration:" . $duration . PHP_EOL;
-        echo "ops/s:" . (1e2 / $duration) . PHP_EOL;
+        echo "ops/s:" . (1e6 / $duration) . PHP_EOL;
     }
     protected $channel;
 }
 $channel = new Channel();
-$pool = new \Pool(2);
+$pool = new \Pool(4);
 $pool->submit(new Test1($channel));
-//$pool->submit(new Test2($channel));
 $pool->submit(new Test2($channel));
+$pool->submit(new Test2($channel));
+$pool->submit(new Test1($channel));
 //$pool->submit(new Test2($channel));
 //function go(Scheduler $scheduler) {
 //    $chan = new Channel();

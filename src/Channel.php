@@ -47,15 +47,15 @@ class Channel extends Threaded
      */
     public function put($data)
     {
-//        echo '------>put=' . $data . PHP_EOL;
-        return $this->synchronized(function() use ($data) {
+        return $this->synchronized(function () use ($data) {
             if ($this->closed) {
                 return false;
             }
+
             $this->putting++;
+            $this->queue[] = $data;
             if ($this->taking > 0) {
-                $this->queue[] = $data;
-               return $this->notify();
+                return $this->notify();
             }
 
             // buffered
@@ -75,7 +75,6 @@ class Channel extends Threaded
                 return false;
             }
 
-            $this->queue[] = $data;
             $this->wait();
 
             return true;
@@ -84,8 +83,7 @@ class Channel extends Threaded
 
     public function take()
     {
-//        echo 'take<------' . PHP_EOL;
-        return $this->synchronized(function() {
+        return $this->synchronized(function () {
             if ($this->closed) {
                 return false;
             }
@@ -94,7 +92,7 @@ class Channel extends Threaded
                 $data = $this->buffer->pop();
                 return $data;
             }
-            if (!$this->closed && $this->putting < 1) {
+            while (!$this->closed && $this->putting < 1) {
                 // no put, block
                 $this->taking++;
                 $this->wait();
@@ -105,11 +103,10 @@ class Channel extends Threaded
                 return false;
             }
 
-//            var_dump('---->', $this->queue);
+
             $data = $this->current();
-//            echo "this -> out " . $data . PHP_EOL;
-            $this->putting--;
             $this->notify();
+            $this->putting--;
 
             return $data;
 
@@ -122,13 +119,14 @@ class Channel extends Threaded
 
     }
 
-    public function current() {
-        var_dump($this->queue);
+    public function current()
+    {
+//        var_dump($this->queue);
         if ($this->isEmpty($this->queue)) {
             return false;
         }
 
-        $data = (array) $this->queue;
+        $data = (array)$this->queue;
         $keys = array_keys($data);
         $ret = array_shift($data);
         $index = $keys[0];
@@ -141,7 +139,7 @@ class Channel extends Threaded
     public function isEmpty($item)
     {
         if (is_object($item)) {
-            $item = (array) $item;
+            $item = (array)$item;
             return empty(array_keys($item));
         }
 

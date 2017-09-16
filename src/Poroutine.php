@@ -70,14 +70,17 @@ class Poroutine
                     $this->exception = null;
                     continue;
                 }
+
                 if ($gen->valid()) {
                     $value = $gen->current();
                 }
+
                 if ($value instanceof Generator) {
                     $coStack->push($gen); // 保存当前的 generator
                     $gen = $value;
                     continue;
                 }
+
                 if (!$gen->valid()) {
                     if ($coStack->isEmpty()) {
                         return $value;
@@ -87,7 +90,9 @@ class Poroutine
                     $gen->send($value);
                     continue;
                 }
+
                 yield $gen->send($value);
+
             } catch (RuntimeException $e) {
                 if ($coStack->isEmpty()) {
                     throw $e;
