@@ -55,7 +55,7 @@ class Channel extends Threaded
             $this->putting++;
             $this->queue[] = $data;
             if ($this->taking > 0) {
-                return $this->notify();
+                return $this->notifyOne();
             }
 
             // buffered
@@ -105,7 +105,7 @@ class Channel extends Threaded
 
 
             $data = $this->current();
-            $this->notify();
+            $this->notifyOne();
             $this->putting--;
 
             return $data;
