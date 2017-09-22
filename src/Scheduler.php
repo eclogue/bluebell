@@ -26,16 +26,16 @@ class Scheduler
     {
         while (!$this->queue->isEmpty()) {
             $task = $this->queue->dequeue();
-            $task->run();
-//            try {
-//                if ($result instanceof SystemCall) {
-//                    $result($this, $task);
-//                }
-//            } catch (\RuntimeException $err) {
-//                $task->reject($err);
-//                $this->schedule($task);
-//                continue;
-//            }
+            $result = $task->run();
+            try {
+                if ($result instanceof SystemCall) {
+                    $result($this, $task);
+                }
+            } catch (\RuntimeException $err) {
+                $task->reject($err);
+                $this->schedule($task);
+                continue;
+            }
             if ($task->isFinish()) {
                 continue;
             }
@@ -54,6 +54,5 @@ class Scheduler
     {
         $this->queue->enqueue($task);
     }
-
 
 }

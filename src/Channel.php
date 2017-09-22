@@ -53,7 +53,13 @@ class Channel extends Threaded
             }
 
             $this->putting++;
-            $this->queue[] = $data;
+            if (!isset($this->queue[$this->putting])) {
+                $this->queue[$this->putting] = $data;
+            } else {
+                $keys = array_keys((array) $this->queue);
+                $pointer = max($keys) + 1;
+                $this->queue[$pointer] = $data;
+            }
             if ($this->taking > 0) {
                 return $this->notifyOne();
             }
@@ -75,6 +81,7 @@ class Channel extends Threaded
                 return false;
             }
 
+//            var_dump($this->queue);
             $this->wait();
 
             return true;
@@ -103,10 +110,9 @@ class Channel extends Threaded
                 return false;
             }
 
-
+            $this->putting--;
             $data = $this->current();
             $this->notifyOne();
-            $this->putting--;
 
             return $data;
 
@@ -121,16 +127,14 @@ class Channel extends Threaded
 
     public function current()
     {
-//        var_dump($this->queue);
         if ($this->isEmpty($this->queue)) {
             return false;
         }
 
-        $data = (array)$this->queue;
+        $data = (array) $this->queue;
         $keys = array_keys($data);
         $ret = array_shift($data);
         $index = $keys[0];
-//        echo "index--->+++" . $index . PHP_EOL;
         unset($this->queue[$index]);
 
         return $ret;
@@ -139,8 +143,8 @@ class Channel extends Threaded
     public function isEmpty($item)
     {
         if (is_object($item)) {
-            $item = (array)$item;
-            return empty(array_keys($item));
+            $item = (array) $item;
+            return empty($item);
         }
 
         return empty($item);

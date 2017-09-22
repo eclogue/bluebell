@@ -4,8 +4,56 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "5d0c5918e9d6424de015db5cef84a7b5",
+    "content-hash": "4bd8e161af120e9c06f3ec97a7035c3a",
     "packages": [
+        {
+            "name": "bfunky/http-parser",
+            "version": "2.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bfunky/http-parser.git",
+                "reference": "aee64793a6652245a44ac92835f33744c7e7d037"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://files.phpcomposer.com/files/bfunky/http-parser/aee64793a6652245a44ac92835f33744c7e7d037.zip",
+                "reference": "aee64793a6652245a44ac92835f33744c7e7d037",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": ">=4.8"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "BFunky\\HttpParser\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jairo Rodríguez",
+                    "email": "jairo@bfunky.net",
+                    "homepage": "http://www.bfunky.net"
+                }
+            ],
+            "description": "A library to parse HTTP headers and HTTP header fields",
+            "keywords": [
+                "http",
+                "http fields",
+                "http parser",
+                "http request",
+                "http response",
+                "parser"
+            ],
+            "time": "2017-05-07T12:15:24+00:00"
+        },
         {
             "name": "react/event-loop",
             "version": "v0.4.3",

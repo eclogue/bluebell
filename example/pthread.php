@@ -37,9 +37,9 @@ class Test1 extends Threaded {
     }
 
     public function run() {
-        for($i =0; $i < 5 * 10; $i++) {
+        for($i =0; $i < 5 ; $i++) {
             $ball = new SplStack();
-            $this->channel->put($ball);
+            $this->channel->put($i);
         }
     }
     protected $channel;
@@ -68,8 +68,8 @@ $channel = new Channel();
 $pool = new \Pool(4);
 $pool->submit(new Test1($channel));
 $pool->submit(new Test2($channel));
-$pool->submit(new Test2($channel));
-$pool->submit(new Test1($channel));
+//$pool->submit(new Test2($channel));
+//$pool->submit(new Test1($channel));
 //$pool->submit(new Test2($channel));
 //function go(Scheduler $scheduler) {
 //    $chan = new Channel();
